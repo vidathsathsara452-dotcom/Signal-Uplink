@@ -92,3 +92,42 @@ echo
 echo "[+] Installation complete"
 echo "[+] Run with: signaluplink"
 
+echo
+read -rp "Run SignalUplink automatically when opening a terminal? (y/N): " AUTORUN
+
+if [[ "$AUTORUN" =~ ^[Yy]$ ]]; then
+    SHELL_NAME=$(basename "$SHELL")
+
+    if [[ "$SHELL_NAME" == "bash" ]]; then
+        RC_FILE="$HOME/.bashrc"
+    elif [[ "$SHELL_NAME" == "zsh" ]]; then
+        RC_FILE="$HOME/.zshrc"
+    else
+        echo "[!] Unsupported shell: $SHELL_NAME"
+        RC_FILE=""
+    fi
+
+    if [[ -n "$RC_FILE" ]]; then
+        # Marker to avoid duplicates
+        MARKER="# SignalUplink autorun"
+
+        if ! grep -q "$MARKER" "$RC_FILE" 2>/dev/null; then
+            echo "[*] Enabling SignalUplink autorun in $RC_FILE"
+
+            cat <<EOF >> "$RC_FILE"
+
+$MARKER
+if [[ \$- == *i* ]]; then
+    command -v signaluplink >/dev/null 2>&1 && signaluplink
+fi
+EOF
+
+            echo "[+] Autorun enabled"
+        else
+            echo "[*] Autorun already enabled"
+        fi
+    fi
+else
+    echo "[*] Autorun skipped"
+fi
+
