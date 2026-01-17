@@ -10,7 +10,7 @@ import ipaddress
 
 init(autoreset=True)
 
-TOOL_PATH = "/usr/share/SignalUplinlk"
+TOOL_PATH = "/usr/share/Signal-Uplinlk"
 BANNER = [] 
 
 banner_file = ""
@@ -32,20 +32,15 @@ r"",
 r"                   SIGNAL UPLINK :: project by Vidath101                          ",
 ]
 
-if os.path.exists(TOOL_PATH + "/banner.txt"):
-    banner_file = TOOL_PATH + "/banner.txt"
+banner_file = os.path.join(TOOL_PATH, "banner.txt")
 
+# Use backup if banner.txt doesn't exist
+if os.path.exists(banner_file):
+    with open(banner_file, "r") as bnfile:
+        BANNER = [line.rstrip("\n") for line in bnfile]
 else:
-    banner_file = "banner.txt"
+    BANNER = backup_BANNER.copy()
 
-with open(banner_file, 'r') as bnfile:
-    file_content = bnfile.readlines()
-    for i in file_content:
-        BANNER.append(i.replace("\n", ""))
-
-if BANNER == None:
-    for i in backup_BANNER:
-        BANNER.append(i)
 # =========================
 # Helpers
 # =========================
