@@ -96,23 +96,29 @@ echo
 read -rp "Run SignalUplink automatically when opening a terminal? (y/N): " AUTORUN
 
 if [[ "$AUTORUN" =~ ^[Yy]$ ]]; then
-    SHELL_NAME=$(basename "$SHELL")
+
+    # Determine target user (not root)
+    TARGET_USER="${SUDO_USER:-$USER}"
+    USER_HOME=$(eval echo "~$TARGET_USER")
+
+    # Detect shell of target user
+    USER_SHELL=$(getent passwd "$TARGET_USER" | cut -d: -f7)
+    SHELL_NAME=$(basename "$USER_SHELL")
 
     if [[ "$SHELL_NAME" == "bash" ]]; then
-        RC_FILE="$HOME/.bashrc"
+        RC_FILE="$USER_HOME/.bashrc"
     elif [[ "$SHELL_NAME" == "zsh" ]]; then
-        RC_FILE="$HOME/.zshrc"
+        RC_FILE="$USER_HOME/.zshrc"
     else
-        echo "[!] Unsupported shell: $SHELL_NAME"
+        echo "[!] Unsupported shell ($SHELL_NAME). Autorun skipped."
         RC_FILE=""
     fi
 
     if [[ -n "$RC_FILE" ]]; then
-        # Marker to avoid duplicates
         MARKER="# SignalUplink autorun"
 
         if ! grep -q "$MARKER" "$RC_FILE" 2>/dev/null; then
-            echo "[*] Enabling SignalUplink autorun in $RC_FILE"
+            echo "[*] Enabling SignalUplink autorun for user '$TARGET_USER'"
 
             cat <<EOF >> "$RC_FILE"
 
@@ -122,9 +128,10 @@ if [[ \$- == *i* ]]; then
 fi
 EOF
 
-            echo "[+] Autorun enabled"
+            chown "$TARGET_USER":"$TARGET_USER" "$RC_FILE"
+            echo "[+] Autorun enabled in $RC_FILE"
         else
-            echo "[*] Autorun already enabled"
+            echo "[*] Autorun already enabled for $TARGET_USER"
         fi
     fi
 else
